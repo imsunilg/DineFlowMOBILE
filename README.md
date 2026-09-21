@@ -120,3 +120,18 @@ Configure release signing per the [Flutter deployment guide](https://docs.flutte
 | Signed out unexpectedly | The refresh token expired or was revoked (password change, sign-out elsewhere). Sign in again. |
 | A screen is missing | The role lacks the permission, or the tenant disabled that module (Business settings in the web app). |
 | Prices look wrong | They never come from the app. Check taxes and billing rules in the web app (Finance). |
+| Android build fails with "Could not close incremental caches" (Windows) | The project and the pub cache are on different drives. `android/gradle.properties` already sets `kotlin.incremental=false`; do not remove it. |
+
+## Environment variables, seed data, migration
+
+- **Environment:** only the two `--dart-define` values above (`API_BASE_URL`, `TENANT_CODE`); nothing else is environment-specific.
+- **Seed data / database setup:** none in the app. Use [DineFlowDB](../DineFlowDB/README.md) and the API's development seed
+  (`admin@dineflow.local` / `DineFlow@Dev1`); see [DineFlowAPI](../DineFlowAPI/README.md).
+- **Running the API and Angular** for a complete environment: the API README (`dotnet run`) and [DineFlowWEB](../DineFlowWEB/README.md) (`npm start`).
+- **Migration:** the app keeps only the server address, business code and tokens; a new version simply replaces the old one.
+
+## Documentation
+
+Platform documentation lives with the API: [ARCHITECTURE](../DineFlowAPI/docs/ARCHITECTURE.md), [API](../DineFlowAPI/docs/API.md),
+[MULTI_TENANCY](../DineFlowAPI/docs/MULTI_TENANCY.md), [WHITE_LABEL](../DineFlowAPI/docs/WHITE_LABEL.md), [DEPLOYMENT](../DineFlowAPI/docs/DEPLOYMENT.md);
+the schema is in [DineFlowDB/DATABASE.md](../DineFlowDB/DATABASE.md). CI (`.github/workflows/ci.yml`) runs `flutter analyze`, `flutter test` and a debug APK build.
