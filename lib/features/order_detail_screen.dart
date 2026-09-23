@@ -6,6 +6,8 @@ import '../core/auth_controller.dart';
 import '../core/models.dart';
 import '../ui/common.dart';
 
+const _orderEvents = ['OrderCreated', 'OrderUpdated', 'OrderItemAdded', 'OrderItemUpdated', 'OrderItemRemoved', 'OrderCancelled'];
+
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
   final String orderId;
@@ -17,6 +19,24 @@ class OrderDetailScreen extends StatefulWidget {
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   int _version = 0;
   bool _busy = false;
+  final _unsubscribes = <void Function()>[];
+
+  @override
+  void initState() {
+    super.initState();
+    // Kitchen/bar marking this order Preparing/Ready shows up here immediately, with no pull-to-refresh needed.
+    for (final type in _orderEvents) {
+      _unsubscribes.add(context.signalr.on(type, (e) { if (e.entityId == widget.orderId && mounted) _refresh(); }));
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final off in _unsubscribes) {
+      off();
+    }
+    super.dispose();
+  }
 
   void _refresh() => setState(() => _version++);
 

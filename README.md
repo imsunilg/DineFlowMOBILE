@@ -34,7 +34,7 @@ Nothing about the environment or the customer is compiled in. Two values are nee
 
 | Value | `--dart-define` | Default | Notes |
 | --- | --- | --- | --- |
-| API address | `API_BASE_URL` | `http://10.0.2.2:5080/api/v1` | `10.0.2.2` is the host machine as seen from the Android emulator |
+| API address | `API_BASE_URL` | `http://<apiHost>:5100/api/v1` | `apiHost` is a constant in `lib/core/config.dart` (the PC's LAN IP, e.g. `192.168.1.6`); change it when the PC's IP changes. On the Android emulator use `10.0.2.2` |
 | Business code | `TENANT_CODE` | empty | Optional. Shows that tenant's logo/colours on the sign-in screen |
 
 Users can change both at runtime from **Server settings** on the sign-in screen; the values are stored with
@@ -53,9 +53,23 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5080/api/v1 --dart-define
 flutter run --dart-define=API_BASE_URL=http://192.168.1.20:5080/api/v1
 ```
 
-Development sign-in (created by the API's dev seeder): `admin@dineflow.local` / `DineFlow@Dev1`.
+Development sign-in (created by the API's dev seeder): `admin@dineflow.local` / `DineFlow@123`, or the login ID `admin`.
 
 Debug builds allow plain `http`; **release builds require `https`** (Android's default; iOS App Transport Security).
+
+### DineFlow Demo Credentials — DEVELOPMENT / DEMO ONLY
+
+Debug builds of the sign-in screen show **Login as Admin** / **Login as Manager** buttons (gated by `kDebugMode`, so they never
+appear in a release build) that fill the form and sign in through the normal `/auth/login` call:
+
+| Role | Login ID | Email | Password |
+| --- | --- | --- | --- |
+| Tenant Admin / Owner | `admin` | `admin@dineflow.local` | `DineFlow@123` |
+| Manager | `manager` | `demo@dineflow.local` | `Demo@123` |
+
+The API must have `Seed:Enabled` and `Seed:Demo:Enabled` on (both default on in `appsettings.Development.json`); see
+[DineFlowAPI/README.md](../DineFlowAPI/README.md#dineflow-demo-credentials--development--demo-only). Change or disable these
+before any deployment that is reachable by anyone but you.
 
 ## Authentication
 
@@ -64,6 +78,14 @@ Debug builds allow plain `http`; **release builds require `https`** (Android's d
 - A `401` triggers **one** shared refresh (`POST /auth/refresh`) and a retry of the failed request; if the refresh fails the user is signed out with a clear message.
 - Sign-out revokes the refresh token on the server.
 - The tenant is taken from the JWT on the server; the app never sends a tenant id.
+
+## Real-time
+
+`lib/core/services/signalr_service.dart` keeps one [signalr_netcore](https://pub.dev/packages/signalr_netcore) connection for the session: it
+connects after sign-in, disconnects on sign-out, reconnects automatically, and checks the connection on app resume (a backgrounded app's socket
+may have been suspended by the OS). Orders, the kitchen board and the floor plan update as events arrive — no pull-to-refresh needed, though it
+still works. Mirrors [DineFlowWEB](../DineFlowWEB)'s real-time service; see the API's
+[docs/ARCHITECTURE.md](../DineFlowAPI/docs/ARCHITECTURE.md#real-time-signalr) for the event list.
 
 ## Screens
 
@@ -98,7 +120,7 @@ Optional contract test against a running API (skipped unless `LIVE_API_URL` is s
 real responses with the app's models and runs a full order: create, add item, send, bill, pay.
 
 ```bash
-LIVE_API_URL=http://localhost:5080/api/v1 LIVE_EMAIL=admin@dineflow.local LIVE_PASSWORD='DineFlow@Dev1' \
+LIVE_API_URL=http://localhost:5080/api/v1 LIVE_EMAIL=admin@dineflow.local LIVE_PASSWORD='DineFlow@123' \
   flutter test test/live_api_test.dart
 ```
 
@@ -126,7 +148,7 @@ Configure release signing per the [Flutter deployment guide](https://docs.flutte
 
 - **Environment:** only the two `--dart-define` values above (`API_BASE_URL`, `TENANT_CODE`); nothing else is environment-specific.
 - **Seed data / database setup:** none in the app. Use [DineFlowDB](../DineFlowDB/README.md) and the API's development seed
-  (`admin@dineflow.local` / `DineFlow@Dev1`); see [DineFlowAPI](../DineFlowAPI/README.md).
+  (`admin@dineflow.local` / `DineFlow@123`); see [DineFlowAPI](../DineFlowAPI/README.md).
 - **Running the API and Angular** for a complete environment: the API README (`dotnet run`) and [DineFlowWEB](../DineFlowWEB/README.md) (`npm start`).
 - **Migration:** the app keeps only the server address, business code and tokens; a new version simply replaces the old one.
 

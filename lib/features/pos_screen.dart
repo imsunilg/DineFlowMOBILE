@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/api_client.dart';
 import '../core/models.dart';
 import '../ui/common.dart';
+
+const _menuEvents = ['MenuUpdated', 'MenuPriceChanged', 'MenuAvailabilityChanged'];
 
 /// Take an order: by table (dine-in), or at the counter (takeaway / delivery). [area] limits the menu to
 /// one service area (the Bar screen passes 'Bar'). Pricing, tax and stock are all handled by the API.
@@ -30,10 +34,31 @@ class _PosScreenState extends State<PosScreen> {
 
   bool get _isTable => widget.tableId != null;
 
+  Timer? _menuDebounce;
+  final List<VoidCallback> _menuUnsubscribes = [];
+
   @override
   void initState() {
     super.initState();
     _load();
+    final signalr = context.signalr;
+    void bump() {
+      _menuDebounce?.cancel();
+      _menuDebounce = Timer(const Duration(milliseconds: 400), () { if (mounted) _load(); });
+    }
+    for (final type in _menuEvents) {
+      _menuUnsubscribes.add(signalr.on(type, (_) => bump()));
+    }
+    _menuUnsubscribes.add(signalr.onReconnected(bump));
+  }
+
+  @override
+  void dispose() {
+    _menuDebounce?.cancel();
+    for (final u in _menuUnsubscribes) {
+      u();
+    }
+    super.dispose();
   }
 
   Future<void> _load() async {

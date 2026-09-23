@@ -27,6 +27,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Plain http is refused in release builds unless DINEFLOW_ALLOW_CLEARTEXT=true (LAN test builds only).
+        manifestPlaceholders["usesCleartextTraffic"] = System.getenv("DINEFLOW_ALLOW_CLEARTEXT") ?: "false"
     }
 
     buildTypes {

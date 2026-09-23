@@ -5,7 +5,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppConfig {
   AppConfig({required this.baseUrl, required this.tenantCode});
 
-  static const _defaultBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5080/api/v1');
+  /// PC's LAN address for development over Wi-Fi. Change it when the PC's IP changes
+  /// (scripts/start-lan.ps1 -BuildApk rewrites it), or override with --dart-define=API_BASE_URL.
+  static const apiHost = '192.168.1.6';
+  static const apiPort = 5100;
+
+  static const _defaultBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://$apiHost:$apiPort/api/v1');
   static const _defaultTenant = String.fromEnvironment('TENANT_CODE', defaultValue: '');
   static const _urlKey = 'api_base_url';
   static const _tenantKey = 'tenant_code';

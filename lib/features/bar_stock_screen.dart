@@ -1,16 +1,53 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
 import '../ui/common.dart';
 
+const _barStockEvents = ['BarStockUpdated', 'BarStockAdjusted', 'BarStockTransferred', 'BarStockWasted', 'LowStock'];
+
 /// Bar stock is tracked in millilitres; the API reports bottles + loose ml per product.
-class BarStockScreen extends StatelessWidget {
+class BarStockScreen extends StatefulWidget {
   const BarStockScreen({super.key});
+
+  @override
+  State<BarStockScreen> createState() => _BarStockScreenState();
+}
+
+class _BarStockScreenState extends State<BarStockScreen> {
+  Key _bodyKey = UniqueKey();
+  Timer? _debounce;
+  final List<VoidCallback> _unsubscribes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final signalr = context.signalr;
+    void bump() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 400), () { if (mounted) setState(() => _bodyKey = UniqueKey()); });
+    }
+    for (final type in _barStockEvents) {
+      _unsubscribes.add(signalr.on(type, (_) => bump()));
+    }
+    _unsubscribes.add(signalr.onReconnected(bump));
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    for (final u in _unsubscribes) {
+      u();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final api = context.api;
     return AsyncBody<List<BarStockRow>>(
+      key: _bodyKey,
       load: () async => (await api.get('bar/stock') as List).whereType<Map<String, dynamic>>().map(BarStockRow.fromJson).toList(),
       isEmpty: (d) => d.isEmpty,
       emptyIcon: Icons.liquor_outlined,

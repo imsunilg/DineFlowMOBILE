@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +9,7 @@ import '../core/models.dart';
 import '../ui/common.dart';
 
 const _filters = <(String, String?)>[('All', null), ('Draft', 'Draft'), ('Confirmed', 'Confirmed'), ('Preparing', 'Preparing'), ('Ready', 'Ready'), ('Served', 'Served'), ('Completed', 'Completed'), ('Cancelled', 'Cancelled')];
+const _orderEvents = ['OrderCreated', 'OrderUpdated', 'OrderItemAdded', 'OrderItemUpdated', 'OrderItemRemoved', 'OrderCancelled'];
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -24,6 +27,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
   bool _more = false;
   Object? _error;
   final _scroll = ScrollController();
+  final _unsubscribes = <void Function()>[];
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -32,10 +37,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
       if (_scroll.position.pixels > _scroll.position.maxScrollExtent - 200 && !_more && !_loading && _page < _totalPages) _load(page: _page + 1);
     });
     _load();
+    // First page only: a scrolled-down list is left alone rather than yanked back to the top on every event.
+    for (final type in _orderEvents) {
+      _unsubscribes.add(context.signalr.on(type, (_) {
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 800), () { if (mounted && _page == 1) _load(); });
+      }));
+    }
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
+    for (final off in _unsubscribes) {
+      off();
+    }
     _scroll.dispose();
     super.dispose();
   }

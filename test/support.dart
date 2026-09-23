@@ -4,6 +4,7 @@ import 'package:dineflow_mobile/core/api_client.dart';
 import 'package:dineflow_mobile/core/auth_controller.dart';
 import 'package:dineflow_mobile/core/branding_controller.dart';
 import 'package:dineflow_mobile/core/config.dart';
+import 'package:dineflow_mobile/core/services/signalr_service.dart';
 import 'package:dineflow_mobile/core/token_store.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -61,4 +62,9 @@ class Harness {
   late final ApiClient api;
   late final AuthController auth;
   late final BrandingController brand;
+
+  // Lazy: constructing it registers a WidgetsBinding observer, which needs a binding that only widget tests have.
+  // Never actually connects in tests (no real server); screens just read it from the widget tree via Provider.
+  SignalrService? _signalr;
+  SignalrService get signalr => _signalr ??= SignalrService(auth: auth, tokens: store, config: config);
 }

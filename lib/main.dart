@@ -6,6 +6,7 @@ import 'core/api_client.dart';
 import 'core/auth_controller.dart';
 import 'core/branding_controller.dart';
 import 'core/config.dart';
+import 'core/services/signalr_service.dart';
 import 'core/token_store.dart';
 
 Future<void> main() async {
@@ -15,6 +16,7 @@ Future<void> main() async {
   final api = ApiClient(config: config, tokens: tokens);
   final auth = AuthController(api: api, tokens: tokens, config: config);
   final branding = BrandingController(api: api, config: config);
+  final signalr = SignalrService(auth: auth, tokens: tokens, config: config);
 
   runApp(MultiProvider(
     providers: [
@@ -22,6 +24,7 @@ Future<void> main() async {
       Provider<ApiClient>.value(value: api),
       ChangeNotifierProvider<AuthController>.value(value: auth),
       ChangeNotifierProvider<BrandingController>.value(value: branding),
+      Provider<SignalrService>.value(value: signalr),
     ],
     child: const DineFlowApp(),
   ));

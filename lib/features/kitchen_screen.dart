@@ -26,17 +26,30 @@ class _KitchenScreenState extends State<KitchenScreen> {
   String? _error;
   bool _busy = false;
   Timer? _timer;
+  Timer? _debounce;
+  final _unsubscribes = <void Function()>[];
 
   @override
   void initState() {
     super.initState();
     _init();
+    // The poll is now just a safety net for a missed event; new/updated tickets normally arrive over SignalR.
     _timer = Timer.periodic(const Duration(seconds: 15), (_) => _refresh(silent: true));
+    for (final type in const ['OrderCreated', 'OrderUpdated', 'OrderItemAdded', 'OrderItemRemoved', 'OrderCancelled']) {
+      _unsubscribes.add(context.signalr.on(type, (_) {
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 500), () { if (mounted) _refresh(silent: true); });
+      }));
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _debounce?.cancel();
+    for (final off in _unsubscribes) {
+      off();
+    }
     super.dispose();
   }
 

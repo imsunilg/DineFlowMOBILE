@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'core/auth_controller.dart';
 import 'core/branding_controller.dart';
 import 'core/nav.dart';
+import 'features/about_screen.dart';
 import 'features/bar_stock_screen.dart';
 import 'features/customers_screen.dart';
 import 'features/dashboard_screen.dart';
@@ -57,6 +58,7 @@ GoRouter buildRouter(AuthController auth, BrandingController brand) {
       GoRoute(path: '/splash', builder: (_, _) => const Scaffold(body: Center(child: CircularProgressIndicator()))),
       GoRoute(path: '/login', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+      GoRoute(path: '/about', builder: (_, _) => const AboutScreen()),
       GoRoute(path: '/', builder: (_, _) => const SizedBox.shrink()),
       GoRoute(path: '/table/:id', builder: (_, s) => PosScreen(tableId: s.pathParameters['id'], tableCode: s.uri.queryParameters['code'])),
       GoRoute(path: '/order/:id', builder: (_, s) => OrderDetailScreen(orderId: s.pathParameters['id']!)),

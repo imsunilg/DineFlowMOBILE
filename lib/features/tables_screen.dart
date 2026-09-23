@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,8 +8,35 @@ import '../core/auth_controller.dart';
 import '../core/models.dart';
 import '../ui/common.dart';
 
-class TablesScreen extends StatelessWidget {
+class TablesScreen extends StatefulWidget {
   const TablesScreen({super.key});
+
+  @override
+  State<TablesScreen> createState() => _TablesScreenState();
+}
+
+class _TablesScreenState extends State<TablesScreen> {
+  // AsyncBody owns the actual list; a TableStatusChanged event nudges it to reload by giving it a fresh key
+  // (the floor plan is a low-traffic screen, so a targeted per-tile patch is not worth the extra state machine).
+  Key _bodyKey = UniqueKey();
+  Timer? _debounce;
+  void Function()? _unsubscribe;
+
+  @override
+  void initState() {
+    super.initState();
+    _unsubscribe = context.signalr.on('TableStatusChanged', (_) {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 500), () { if (mounted) setState(() => _bodyKey = UniqueKey()); });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _unsubscribe?.call();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +44,7 @@ class TablesScreen extends StatelessWidget {
     final canOrder = context.watch<AuthController>().can('Order.Create');
 
     return AsyncBody<(List<FloorLayout>, TableSummary)>(
+      key: _bodyKey,
       load: () async {
         final layout = (await api.get('tables/layout') as List).whereType<Map<String, dynamic>>().map(FloorLayout.fromJson).toList();
         final summary = TableSummary.fromJson((await api.get('tables/summary')) as Map<String, dynamic>);

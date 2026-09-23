@@ -25,6 +25,7 @@ class MoreScreen extends StatelessWidget {
       ListTile(leading: const Icon(Icons.notifications_outlined), title: const Text('Alerts'), trailing: const Icon(Icons.chevron_right), onTap: () => context.go('/notifications')),
       ListTile(leading: const Icon(Icons.person_outline), title: const Text('Profile'), trailing: const Icon(Icons.chevron_right), onTap: () => context.go('/profile')),
       ListTile(leading: const Icon(Icons.settings_outlined), title: const Text('Server settings'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/settings')),
+      ListTile(leading: const Icon(Icons.info_outline), title: const Text('About'), trailing: const Icon(Icons.chevron_right), onTap: () => context.push('/about')),
     ]);
   }
 }

@@ -5,6 +5,7 @@ import 'package:dineflow_mobile/core/api_client.dart';
 import 'package:dineflow_mobile/core/auth_controller.dart';
 import 'package:dineflow_mobile/core/branding_controller.dart';
 import 'package:dineflow_mobile/core/config.dart';
+import 'package:dineflow_mobile/core/services/signalr_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -104,6 +105,7 @@ Future<Harness> startApp(WidgetTester tester, Map<String, dynamic> user) async {
       Provider<ApiClient>.value(value: h.api),
       ChangeNotifierProvider<AuthController>.value(value: h.auth),
       ChangeNotifierProvider<BrandingController>.value(value: h.brand),
+      Provider<SignalrService>.value(value: h.signalr),
     ],
     child: const DineFlowApp(),
   ));
@@ -112,7 +114,7 @@ Future<Harness> startApp(WidgetTester tester, Map<String, dynamic> user) async {
 }
 
 Future<void> signIn(WidgetTester tester) async {
-  await tester.enterText(find.widgetWithText(TextFormField, 'Email'), 'asha@acme.test');
+  await tester.enterText(find.widgetWithText(TextFormField, 'Email or Login ID'), 'asha@acme.test');
   await tester.enterText(find.widgetWithText(TextFormField, 'Password'), 'secret');
   await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
   await tester.pumpAndSettle();
@@ -129,7 +131,7 @@ void main() {
     await startApp(tester, userJson(permissions: _waiterPerms));
     await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
     await tester.pump();
-    expect(find.text('Enter your email address'), findsOneWidget);
+    expect(find.text('Enter your email or login ID'), findsOneWidget);
     expect(find.text('Enter your password'), findsOneWidget);
   });
 

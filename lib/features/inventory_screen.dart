@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../core/models.dart';
 import '../ui/common.dart';
+
+const _inventoryEvents = ['InventoryUpdated', 'StockAdjusted', 'StockTransferred', 'StockReceived', 'StockWasted', 'LowStock'];
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -13,10 +17,31 @@ class InventoryScreen extends StatefulWidget {
 class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProviderStateMixin {
   late final TabController _tabs = TabController(length: 2, vsync: this);
   String _search = '';
+  int _reloadTick = 0;
+  Timer? _debounce;
+  final List<VoidCallback> _unsubscribes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final signalr = context.signalr;
+    void bump() {
+      _debounce?.cancel();
+      _debounce = Timer(const Duration(milliseconds: 400), () { if (mounted) setState(() => _reloadTick++); });
+    }
+    for (final type in _inventoryEvents) {
+      _unsubscribes.add(signalr.on(type, (_) => bump()));
+    }
+    _unsubscribes.add(signalr.onReconnected(bump));
+  }
 
   @override
   void dispose() {
     _tabs.dispose();
+    _debounce?.cancel();
+    for (final u in _unsubscribes) {
+      u();
+    }
     super.dispose();
   }
 
@@ -34,7 +59,7 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
             ),
             Expanded(
               child: AsyncBody<List<InvStockRow>>(
-                key: ValueKey(_search),
+                key: ValueKey('$_search:$_reloadTick'),
                 load: () async => Paged.from(await api.get('inventory/stock', query: {'pageSize': 100, 'search': _search}), InvStockRow.fromJson).items,
                 isEmpty: (d) => d.isEmpty,
                 emptyIcon: Icons.inventory_2_outlined,
@@ -58,6 +83,7 @@ class _InventoryScreenState extends State<InventoryScreen> with SingleTickerProv
             ),
           ]),
           AsyncBody<List<StockAlert>>(
+            key: ValueKey(_reloadTick),
             load: () async => (await api.get('inventory/alerts') as List).whereType<Map<String, dynamic>>().map(StockAlert.fromJson).toList(),
             isEmpty: (d) => d.isEmpty,
             emptyIcon: Icons.check_circle_outline,

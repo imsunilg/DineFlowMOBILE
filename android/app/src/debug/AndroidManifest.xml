@@ -1,6 +1,7 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <!-- Debug builds may talk to a plain-http development server (for example the emulator host 10.0.2.2).
-         Release builds keep Android's default and must use https. -->
+         Release builds keep Android's default (tools:replace wins over the placeholder resolved in the main
+         manifest, which defaults to "false" unless DINEFLOW_ALLOW_CLEARTEXT=true is set for that build). -->
     <uses-permission android:name="android.permission.INTERNET"/>
-    <application android:usesCleartextTraffic="true" />
+    <application android:usesCleartextTraffic="true" tools:replace="android:usesCleartextTraffic" />
 </manifest>

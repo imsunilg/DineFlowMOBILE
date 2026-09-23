@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../core/api_client.dart';
 import '../core/branding_controller.dart';
+import '../core/services/signalr_service.dart';
 
 extension ContextX on BuildContext {
   ApiClient get api => read<ApiClient>();
   BrandingController get brand => watch<BrandingController>();
+  SignalrService get signalr => read<SignalrService>();
   String money(num v) => watch<BrandingController>().money(v);
 
   void toast(String message, {bool error = false}) {
