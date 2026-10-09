@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import 'api_client.dart';
@@ -36,15 +37,22 @@ class BrandingController extends ChangeNotifier {
   }
 
   ThemeData theme(Brightness brightness) {
-    final seed = parseColor(_branding?.primaryColor, const Color(0xFF7C3AED));
-    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, secondary: parseColor(_branding?.accentColor, const Color(0xFFF59E0B)));
+    final seed = parseColor(_branding?.primaryColor, const Color(0xFFC8102E));
+    final scheme = ColorScheme.fromSeed(seedColor: seed, brightness: brightness, secondary: parseColor(_branding?.accentColor, const Color(0xFFF7941D)));
+    final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(10), side: BorderSide(color: scheme.outlineVariant));
+    final buttonShape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(10));
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
-      appBarTheme: AppBarTheme(centerTitle: false, backgroundColor: scheme.surface, surfaceTintColor: scheme.surfaceTint),
-      cardTheme: CardThemeData(elevation: 0, color: scheme.surfaceContainerLow, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-      inputDecorationTheme: InputDecorationTheme(border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size(48, 48), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))),
+      textTheme: GoogleFonts.interTextTheme(brightness == Brightness.dark ? ThemeData.dark().textTheme : ThemeData.light().textTheme),
+      appBarTheme: AppBarTheme(centerTitle: false, backgroundColor: scheme.surface, surfaceTintColor: scheme.surfaceTint, elevation: 0),
+      cardTheme: CardThemeData(elevation: 0, color: scheme.surfaceContainerLow, shape: shape),
+      inputDecorationTheme: InputDecorationTheme(border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(minimumSize: const Size(48, 48), shape: buttonShape)),
+      elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48), elevation: 0, shape: buttonShape)),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48), shape: buttonShape)),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(shape: buttonShape)),
+      chipTheme: ChipThemeData(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))),
     );
   }
 
